@@ -1,0 +1,54 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style TargetType="TextBox" x:Key="AddUserMessageBox">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border CornerRadius="8" Background="#2b2f3d">
+
+                        <Grid>
+                            <TextBox VerticalAlignment="Stretch"
+                                     VerticalContentAlignment="Center"
+                                     HorizontalAlignment="Stretch"
+                                     x:Name="AddUserMessageBox"
+                                     Background="Transparent"
+                                     TextWrapping="Wrap"
+                                     BorderThickness="0"
+                                     Foreground="Gray"
+                                     CaretBrush="Gray"
+                                     Margin="8,0,0,0"
+                                     Text="{Binding ContactId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     >
+
+                            </TextBox>
+
+                            <TextBlock IsHitTestVisible="False"
+                                       Text="{TemplateBinding Text}"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Left"
+                                       Margin="10,0,0,0"
+                                       Foreground="DarkGray">
+
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, ElementName=AddUserMessageBox}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+</ResourceDictionary>
