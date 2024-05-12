@@ -1,9 +1,15 @@
-﻿using System;
+﻿using ChatApp.MVVM.Model;
+using ChatApp.MVVM.ViewModel;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace ChatApp.Network
 {
@@ -18,15 +24,19 @@ namespace ChatApp.Network
             _tcpClient = tcpClient;
         }
 
-        public void ConnectToServer(string host, int port, string Username)
+        public void ConnectToServer(string host, int port)
         {
             if (!_tcpClient.Connected)
             {
                 _tcpClient.Connect(host, port);
-                _tcpClient.Client.Send(_packetBuilder.CreatePacket(0, Username));
-                //_tcpClient.GetStream().Flush();
                 _ = Task.Run(() => ReceivePackets());
             }
+        }
+
+        public void SendInitialPacket(string Username)
+        {
+            PacketBuilder packet = new PacketBuilder { Opcode = 0, Username = Username, AdditionalData = "" };
+            _tcpClient.Client.Send(packet.Serialize());
         }
 
         private void ReceiveCallback(IAsyncResult result)
@@ -46,23 +56,72 @@ namespace ChatApp.Network
             }
         }
 
-        public static void AddContact(string contactId)
+        public static void AddContact(string contactId, string senderUsername)
         {
             if (_tcpClient.Connected)
             {
-                _tcpClient.Client.Send(_packetBuilder.CreatePacket(1, contactId));
+                PacketBuilder packet = new PacketBuilder { Opcode = 1, Username = contactId, SenderUsername = senderUsername, AdditionalData = "" };
+                _tcpClient.Client.Send(packet.Serialize());
             }
         }
 
         private async Task ReceivePackets()
         {
-            
-            await Console.Out.WriteLineAsync("KURVCA");
             PacketReader packetReader = new PacketReader(_tcpClient.GetStream());
 
-            while (true)
+            try
             {
-                await packetReader.ReadPacket(_tcpClient);
+                while (true)
+                {
+                    byte[] packetData = await packetReader.ReadPacket();
+                    PacketBuilder packet = await packetReader.DecodePacketAsync(packetData);
+                    if (packet != null)
+                    {
+                        switch (packet.Opcode)
+                        {
+                            case 0:
+                                Console.Out.WriteLine("Received contacts");
+                                JArray additionalData = (JArray)packet.AdditionalData;
+
+                                List<ContactModel> receivedContacts = new List<ContactModel>();
+                                foreach (var item in additionalData)
+                                {
+                                    // Convert the JToken to a string and deserialize it into a ContactModel
+                                    ContactModel contact = item.ToObject<ContactModel>();
+                                    receivedContacts.Add(contact);
+                                }
+
+                                // Update MainViewModel.Contacts with the received contacts
+                                MainViewModel.UpdateContacts(receivedContacts);
+                                break;
+
+
+                            case 1:
+                                receivedContacts = new List<ContactModel>
+                                {
+                                    new ContactModel
+                                    {
+                                        Username = packet.Username,
+                                        ImageSrc = "C:\\Users\\admin\\source\\repos\\ChatApp\\ChatApp\\Icons\\no_profile.png",
+                                        Messages = new ObservableCollection<MessageModel>()
+                                    }
+                                };
+
+                                MainViewModel.UpdateContacts(receivedContacts);
+                                
+                                break;
+                            case 9:
+
+                                break;
+                        }
+                        // Process the received packet
+                        Console.WriteLine("Received packet: " + packet.Username);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error receiving packets: " + ex.Message);
             }
         }
 

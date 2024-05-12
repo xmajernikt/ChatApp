@@ -38,19 +38,32 @@ namespace ChatApp
 
         private void Minimize_Button_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.MainWindow.WindowState = WindowState.Minimized;
+            // Assuming you have a reference to the window you want to minimize
+            // Replace WindowName with the actual name of the window class
+            Window win = Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.Name == "MainWindowName");
+
+
+            if (win != null)
+            {
+                win.WindowState = WindowState.Minimized;
+            }
         }
 
         private void Maximize_Button_Click(object sender, RoutedEventArgs e)
         {
-            if (Application.Current.MainWindow.WindowState != WindowState.Maximized)
+            Window win = Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.Name == "MainWindowName");
+            if (win != null)
             {
-                Application.Current.MainWindow.WindowState = WindowState.Maximized;
+                if (win.WindowState != WindowState.Maximized)
+                {
+                    win.WindowState = WindowState.Maximized;
+                }
+                else
+                {
+                    win.WindowState = WindowState.Normal;
+                }
             }
-            else
-            {
-                Application.Current.MainWindow.WindowState = WindowState.Normal;
-            }
+            
         }
 
         private void Close_Button_Click(object sender, RoutedEventArgs e)
@@ -75,6 +88,18 @@ namespace ChatApp
             {
                 // User clicked "Cancel" or closed the window
             }
+        }
+
+        private MainWindow GetWindowFromResourceDictionary(string windowName)
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window.GetType().Name == windowName)
+                {
+                    return (MainWindow)window;
+                }
+            }
+            return null;
         }
     }
 }

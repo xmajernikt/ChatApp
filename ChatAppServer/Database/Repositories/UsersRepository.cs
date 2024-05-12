@@ -30,15 +30,15 @@ namespace ChatAppServer.Database.Repositories
 
         }
 
-        public User? GetUser(Guid userId)
+        public User? GetUser(string username)
         {
             try
             {
-                string getUserQuery = "SELECT * FROM users WHERE id = @p1";
+                string getUserQuery = "SELECT * FROM users WHERE username = @p1";
 
                 using (NpgsqlCommand getUserCommand = new NpgsqlCommand(getUserQuery, _connection))
                 {
-                    getUserCommand.Parameters.Add(new NpgsqlParameter("p1", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = userId });
+                    getUserCommand.Parameters.Add(new NpgsqlParameter("p1", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = username });
 
                     using (NpgsqlDataReader getUserReader = getUserCommand.ExecuteReader())
                     {
@@ -48,7 +48,6 @@ namespace ChatAppServer.Database.Repositories
                             {
                                 Username = getUserReader["username"].ToString(),
                                 ImageSrc = getUserReader["imageSrc"].ToString(),
-                                UserId = (Guid)getUserReader["id"],
                                 CreatedAt = (DateTime)getUserReader["created_at"]
                             };
                             return user;
@@ -69,15 +68,14 @@ namespace ChatAppServer.Database.Repositories
         {
             try
             {
-                string insertCommand = "INSERT INTO users (id, username, imagesrc, created_at) VALUES (@p1, @p2, @p3, @p4)";
+                string insertCommand = "INSERT INTO users (username, imagesrc, created_at) VALUES (@p1, @p2, @p3)";
 
                 using (NpgsqlCommand insertUserCommand = new NpgsqlCommand(insertCommand, _connection))
                 {
                     // Add parameters for each value to be inserted
-                    insertUserCommand.Parameters.Add(new NpgsqlParameter("p1", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = user.UserId });
-                    insertUserCommand.Parameters.Add(new NpgsqlParameter("p2", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = user.Username });
-                    insertUserCommand.Parameters.Add(new NpgsqlParameter("p3", NpgsqlTypes.NpgsqlDbType.Text) { Value = user.ImageSrc });
-                    insertUserCommand.Parameters.Add(new NpgsqlParameter("p4", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = user.CreatedAt });
+                    insertUserCommand.Parameters.Add(new NpgsqlParameter("p1", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = user.Username });
+                    insertUserCommand.Parameters.Add(new NpgsqlParameter("p2", NpgsqlTypes.NpgsqlDbType.Text) { Value = user.ImageSrc });
+                    insertUserCommand.Parameters.Add(new NpgsqlParameter("p3", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = user.CreatedAt });
 
                     // Execute the command (no need for a reader)
                     int rowsAffected = insertUserCommand.ExecuteNonQuery();

@@ -10,7 +10,6 @@ namespace ChatAppServer.Database.Models
     {
         public string? Username { get; set; }
         public string? ImageSrc { get; set; }
-        public Guid UserId { get; set; }
         public DateTime CreatedAt {  get; set; }  
     }
 }

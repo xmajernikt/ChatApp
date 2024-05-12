@@ -3,12 +3,12 @@
 
 namespace ChatAppServer.Database
 {
-    internal class DbContext
+    public class DbContext
     {
         private string? dbConnectionString;
 
         // Initialize Connection property to null
-        public NpgsqlConnection? Connection { get; private set; }
+        public static NpgsqlConnection? Connection { get; private set; }
 
         public void ConnectToDatabase()
         {

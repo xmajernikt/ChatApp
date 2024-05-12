@@ -8,10 +8,11 @@ namespace ChatAppServer.Database.Models
 {
     internal class Contact
     {
-        private Guid userId { get; set; }
-        private string Username {  get; set; }
-        private string ImageSrc { get; set; }
-        private string LastMessage { get; set; }
-        private DateTime createdAt { get; set; }
+        public Guid Id { get; set; }
+        public string UsernameId { get; set; }
+        public string Username {  get; set; }
+        public string ImageSrc { get; set; }
+        public string LastMessage { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Design;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -15,9 +16,18 @@ namespace ChatApp.MVVM.ViewModel
 {
     internal class MainViewModel : ObservableObject
     {
-        public ObservableCollection<ContactModel> Contacts { get; set; }
+        public static ObservableCollection<ContactModel> _contacts;
+        public ObservableCollection<ContactModel> Contacts
+        {
+            get { return _contacts; }
+            set
+            {
+                _contacts = value;
+                OnPropertyChanged(nameof(Contacts));
+            }
+        }
         public ObservableCollection<MessageModel> Messages { get; set; }
-        private User user { get; set; }
+        public static User user { get; set; }
         public static event EventHandler<User> UserLoggedIn;
 
         private ContactModel _selecteContact;
@@ -76,8 +86,9 @@ namespace ChatApp.MVVM.ViewModel
             // This method will be called when the UserLoggedIn event is raised
             Console.WriteLine($"{e.Username}");
             user = new User { Username = e.Username, ImageSrc = e.ImageSrc };
-            serverUtils = new ServerUtils(new TcpClient());
-            serverUtils.ConnectToServer("127.0.0.1", 55400, e.Username);
+            //serverUtils = new ServerUtils(new TcpClient());
+            //serverUtils.ConnectToServer("127.0.0.1", 55400, e.Username);
+            serverUtils.SendInitialPacket(e.Username);
         }
 
         public class UserLoggedInEventArgs
@@ -93,6 +104,7 @@ namespace ChatApp.MVVM.ViewModel
 
             
             Contacts = new ObservableCollection<ContactModel>();
+            
 
             Messages = new ObservableCollection<MessageModel>
             {
@@ -125,11 +137,20 @@ namespace ChatApp.MVVM.ViewModel
                 });
             }
 
-            for (int i = 0; i < 10; i++)
-            {
-                Contacts.Add(new ContactModel { ImageSrc = "C:\\Obrázky\\Snímky obrazovky\\cv_photo.png", Username = $"Test {i}" , Messages = Messages});
-            }
+           
             
+        }
+
+        public static void UpdateContacts(IEnumerable<ContactModel> receivedContacts)
+        {
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                foreach (var contact in receivedContacts)
+                {
+                    _contacts.Add(contact); // Add each received contact
+                }
+            });
         }
 
 
@@ -169,7 +190,10 @@ namespace ChatApp.MVVM.ViewModel
         public static void SetImageSrc(DependencyObject obj, string value)
         {
             obj.SetValue(ImageSrcProperty, value);
+            
         }
+
+        
     }
 
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,17 +17,34 @@ namespace ChatApp.Network
             _stream = stream;
         }
 
-        public async Task ReadPacket(TcpClient tcpClient)
+        public async Task<byte[]> ReadPacket()
         {
-            NetworkStream networkStream = tcpClient.GetStream();
-            var lenght = ReadInt32();
-            byte[] data = new byte[lenght];
-            int bytesRead;
+            int length = ReadInt32();
+            byte[] data = ReadBytes(length);
+            return data;
+        }
 
-            while ((bytesRead = await networkStream.ReadAsync(data, 0, lenght)) > 0)
+        public async Task<PacketBuilder> DecodePacketAsync(byte[] data)
+        {
+            try
             {
-                string receivedData = Encoding.UTF8.GetString(data);
-                await Console.Out.WriteLineAsync(receivedData);
+                return await Task.Run(() => Deserialize(data));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error decoding packet: " + ex.Message);
+                return null;
+            }
+        }
+
+        private static PacketBuilder Deserialize(byte[] data)
+        {
+            using (MemoryStream stream = new MemoryStream(data))
+            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+            using (JsonTextReader jsonReader = new JsonTextReader(reader))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                return serializer.Deserialize<PacketBuilder>(jsonReader);
             }
         }
     }

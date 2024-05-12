@@ -8,12 +8,13 @@ namespace ChatAppServer.Database.Models
 {
     internal class Message
     {
-        private Guid messageId {  get; set; }
-        private Guid userId {  get; set; }
-        private Guid contactId {  get; set; }
-        private string message {  get; set; }
-        private bool IsNativeOriginated { get; set; }
-        private bool IsFirstMessage {  get; set; }
+        public Guid Id {  get; set; }
+        public Guid UserId {  get; set; }
+        public Guid ContactId {  get; set; }
+        public string? MessageText {  get; set; }
+        public bool IsNativeOriginated { get; set; }
+        public bool IsFirstMessage {  get; set; }
+        public DateTime CreatedAt { get; set; }
 
     }
 }

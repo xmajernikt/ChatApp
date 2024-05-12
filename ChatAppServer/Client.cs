@@ -19,16 +19,7 @@ namespace ChatAppServer
 
         public Client(TcpClient tcpClient) 
         {
-            Console.WriteLine("PAPAPA");
-            TcpClient = tcpClient;
-            Id = Guid.NewGuid();
-            _packetReader = new PacketReader(tcpClient.GetStream());
-            var opcode = _packetReader.ReadByte();
-            Console.WriteLine($"{opcode}");
-            Username = _packetReader.DecodePacket();
-            Console.WriteLine($"[{DateTime.Now}] Client {Username} has connected");
-            Console.WriteLine("PAPAPA");
-
+            
 
         }
     }

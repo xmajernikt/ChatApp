@@ -41,9 +41,8 @@ namespace ChatAppServer
         private async Task ManageClient(TcpClient tcpClient)
         {
             PacketReader packetReader = new(tcpClient.GetStream());
-            var opcode = packetReader.ReadByte();
-            await Console.Out.WriteLineAsync($"Opcode is {opcode}");
-            await packetReader.ManageClientAsync(tcpClient, _clients);
+            
+            await packetReader.ManageClientAsync(tcpClient);
        
         }
     }

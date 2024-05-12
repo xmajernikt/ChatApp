@@ -26,7 +26,7 @@ namespace ChatApp.MVVM.ViewModel
 
 		public AddContactViewModel()
 		{
-			AddContactCommand = new RelayCommand(o => ServerUtils.AddContact(contactId));
+			AddContactCommand = new RelayCommand(o => ServerUtils.AddContact(contactId, MainViewModel.user.Username));
 		}
 
 	}
