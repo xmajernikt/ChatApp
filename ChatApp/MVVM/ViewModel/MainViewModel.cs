@@ -26,8 +26,18 @@ namespace ChatApp.MVVM.ViewModel
                 OnPropertyChanged(nameof(Contacts));
             }
         }
-        public ObservableCollection<MessageModel> Messages { get; set; }
         public static User user { get; set; }
+
+        private static ObservableCollection<MessageModel> _messages;
+        public ObservableCollection<MessageModel> Messages
+        {
+            get { return _messages; }
+            set
+            {
+                _messages = value;
+                OnPropertyChanged(nameof(Messages));
+            }
+        }
         public static event EventHandler<User> UserLoggedIn;
 
         private ContactModel _selecteContact;
@@ -104,40 +114,52 @@ namespace ChatApp.MVVM.ViewModel
 
             
             Contacts = new ObservableCollection<ContactModel>();
-            
 
-            Messages = new ObservableCollection<MessageModel>
-            {
-                new MessageModel
-                {
-                    Message = $"Test -1",
-                    Username = $"TEST -1",
-                    UsernameColor = "White",
-                    ImageSrc = "C:\\Obrázky\\Snímky obrazovky\\cv_photo.png",
-                    IsFirstMessage = true,
-                    IsNativeOrigined = false,
-                    Time = DateTime.Now
-                }
-            };
+
+            Messages = new ObservableCollection<MessageModel>();
+            
 
             SendCommand = new RelayCommand(o =>
             {
-                Messages.Add(new MessageModel
-                {
-                    Message = Message,
-                    IsFirstMessage = false          
-                });
+                //Messages.Add(new MessageModel
+                //{
+                //    Message = Message,
+                //    IsFirstMessage = false          
+                //});
+                GetContact(SelectedContact.Username, Message, user.Username);
+                serverUtils.SendMessageToContact(SelectedContact.Username, user.Username, Message);
                 Message = "";
             });
-            for (int i = 0; i < 10; i++)
-            {
-                Messages.Add(new MessageModel
-                {
-                     Message = $"Test {i}", Username = $"TEST {i}", UsernameColor = "White", IsFirstMessage = false, IsNativeOrigined = false, Time = DateTime.Now
-                });
-            }
+            
 
            
+            
+        }
+
+        public static void GetContact(string Username, string Message, string NativeSender = null)
+        {
+            string senderUsername = NativeSender is null ? Username : NativeSender;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                foreach (var contact in _contacts)
+                {
+                    if (contact.Username == Username)
+                    {
+                        contact.Messages.Add(new MessageModel
+                        {
+                            Message = Message,
+                            Username = senderUsername,
+                            Time = DateTime.Now,
+                            IsFirstMessage = true,
+                            IsNativeOrigined = false,
+                            ImageSrc = "C:\\Users\\admin\\source\\repos\\ChatApp\\ChatApp\\Icons\\no_profile.png",
+
+
+                        });
+                        break;
+                    }
+                }
+            });
             
         }
 
@@ -150,6 +172,20 @@ namespace ChatApp.MVVM.ViewModel
                 {
                     _contacts.Add(contact); // Add each received contact
                 }
+            });
+        }
+
+        public static void GetAllMessges(IEnumerable<MessageModel> receivedMessages)
+        {
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                foreach (var message in receivedMessages)
+                {
+                    _messages.Add(message); // Add each received contact
+                }
+
+                
             });
         }
 

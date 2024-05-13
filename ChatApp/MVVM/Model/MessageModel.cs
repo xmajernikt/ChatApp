@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChatApp.MVVM.Model
 {
-    internal class MessageModel
+    public class MessageModel
     {
         public string Username { get; set; }
         public string Message { get; set; }
@@ -14,6 +14,7 @@ namespace ChatApp.MVVM.Model
         public string ImageSrc { get; set; }
         public bool IsNativeOrigined { get; set; }
         public bool IsFirstMessage { get; set; }
+        public Guid ContactId { get; set; }
         public DateTime Time { get; set; }
 
     }

@@ -71,6 +71,7 @@
       <SubType>Designer</SubType>
     </Page>
     <Compile Include="Core\BindableProperty.cs" />
+    <Compile Include="MVVM\Model\ContactAndMessageData.cs" />
     <Compile Include="MVVM\Model\User.cs" />
     <Compile Include="MVVM\ViewModel\AddContactViewModel.cs" />
     <Compile Include="MVVM\ViewModel\LoginViewModel.cs" />

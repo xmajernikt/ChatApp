@@ -14,7 +14,8 @@ namespace ChatAppServer
         private readonly IPAddress _address = address;
         private readonly int _port = port;
         private TcpListener? Listener { get; set; }
-        private static readonly List<Client> _clients = [];
+        public static Dictionary<string, TcpClient> UserToSocket = new Dictionary<string, TcpClient>();
+        public static object UserToSocketLock = new object();
 
         public async Task StartServer()
         {
@@ -26,12 +27,12 @@ namespace ChatAppServer
                 while (true)
                 {
                     TcpClient client = await Listener.AcceptTcpClientAsync();
-                    _clients.Add(new Client(client));
+                    
                     _ = Task.Run(() => ManageClient(client));
                 }
             } catch (Exception ex)
             {
-
+                Console.Out.WriteLine(ex.ToString());
             }
            
            

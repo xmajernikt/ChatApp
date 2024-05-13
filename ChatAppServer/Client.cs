@@ -17,10 +17,6 @@ namespace ChatAppServer
 
         private PacketReader _packetReader;
 
-        public Client(TcpClient tcpClient) 
-        {
-            
-
-        }
+        
     }
 }

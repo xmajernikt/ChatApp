@@ -25,7 +25,7 @@ namespace ChatAppServer.Database.Repositories
                 string insertionString =
                     """
                     INSERT INTO messages 
-                    (id, message, created_at, isnativeoriginated, isfirstmessage, usersid, contactsid) 
+                    (id, message, created_at, isnativeoriginated, isfirstmessage, usersusername, contactsid) 
                     VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7)
                     """;
 
@@ -36,7 +36,7 @@ namespace ChatAppServer.Database.Repositories
                     insertionCommand.Parameters.Add(new NpgsqlParameter("p3", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = message.CreatedAt });
                     insertionCommand.Parameters.Add(new NpgsqlParameter("p4", NpgsqlTypes.NpgsqlDbType.Boolean) { Value = message.IsNativeOriginated });
                     insertionCommand.Parameters.Add(new NpgsqlParameter("p5", NpgsqlTypes.NpgsqlDbType.Boolean) { Value = message.IsFirstMessage });
-                    insertionCommand.Parameters.Add(new NpgsqlParameter("p6", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = message.UserId });
+                    insertionCommand.Parameters.Add(new NpgsqlParameter("p6", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = message.UsernameID });
                     insertionCommand.Parameters.Add(new NpgsqlParameter("p7", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = message.ContactId });
 
                     int rowsAffected = insertionCommand.ExecuteNonQuery();
@@ -58,19 +58,19 @@ namespace ChatAppServer.Database.Repositories
             }
         }
 
-        public List<Message> GetMessages(Guid userId)
+        public List<Message> GetMessages(string UsernameId)
         {
             List<Message> messages = [];
             string getMessagesQuery =
                 """
-                SELECT * FROM messages WHERE userid = @p1   
+                SELECT * FROM messages WHERE usersusername = @p1   
                 """;
 
             try
             {
                 using (NpgsqlCommand getMessagesCommand = new NpgsqlCommand(getMessagesQuery, _connection))
                 {
-                    getMessagesCommand.Parameters.Add(new NpgsqlParameter("p1", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = userId });
+                    getMessagesCommand.Parameters.Add(new NpgsqlParameter("p1", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = UsernameId });
 
                     using (NpgsqlDataReader reader = getMessagesCommand.ExecuteReader())
                     {
@@ -79,7 +79,7 @@ namespace ChatAppServer.Database.Repositories
                             messages.Add(new Message
                             {
                                 Id = (Guid)reader["id"],
-                                UserId = (Guid)reader["usersid"],
+                                UsernameID = (string)reader["usersusername"],
                                 ContactId = (Guid)reader["contactsid"],
                                 MessageText = reader["message"].ToString(),
                                 IsFirstMessage = (bool)reader["isfirstmessage"],

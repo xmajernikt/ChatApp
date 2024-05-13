@@ -1,6 +1,7 @@
 ﻿using ChatAppServer.Database;
 using ChatAppServer.Database.Models;
 using ChatAppServer.Database.Repositories;
+
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,7 @@ namespace ChatAppServer.IO
             {
                 UsersRepository usersRepository = new UsersRepository(DbContext.Connection);
                 ContactRepository contactRepository = new ContactRepository(DbContext.Connection);
+                MessageRepository messageRepository = new MessageRepository(DbContext.Connection);
 
                 while (true)
                 {
@@ -59,21 +61,30 @@ namespace ChatAppServer.IO
                         {
                             case 0:
                                 Console.WriteLine($"[{DateTime.Now}] Client {deserializedPacket.Username} has connected");
-
+                                lock (Server.UserToSocketLock)
+                                {
+                                    Server.UserToSocket[deserializedPacket.Username] = tcpClient;
+                                }
                                 usersRepository.InsertUser(new Database.Models.User
                                 {
                                     Username = deserializedPacket.Username,
                                     ImageSrc = (string)deserializedPacket.AdditionalData,
                                     CreatedAt = DateTime.UtcNow,
                                 });
+                                List<Message> messages = messageRepository.GetMessages(deserializedPacket.Username);
 
                                 List<Contact> contacts = contactRepository.GetContacts(deserializedPacket.Username);
+                                ContactAndMessageData contactsAndMessages = new ContactAndMessageData
+                                {
+                                    Contacts = contacts,
+                                    Messages = messages
+                                };
                                 PacketBuilder contactsPacket = new PacketBuilder
                                 {
                                     Username = deserializedPacket.Username,
                                     Opcode = 0,
                                     SenderUsername = "server",
-                                    AdditionalData = contacts
+                                    AdditionalData = contactsAndMessages
                                 };
                                 tcpClient.Client.Send(contactsPacket.Serialize());
                                 break;
@@ -86,7 +97,7 @@ namespace ChatAppServer.IO
                                     Id = Guid.NewGuid(),
                                     Username = user.Username, 
                                     UsernameId = deserializedPacket.SenderUsername, 
-                                    ImageSrc = "C:\\Users\\admin\\source\\repos\\ChatApp\\ChatApp\\Icons\\no_profile.png", 
+                                    ImageSrc = "./Icons/no_profile.png", 
                                     LastMessage = "", 
                                     CreatedAt = DateTime.UtcNow };
                                 contactRepository.AddContact(contact);
@@ -101,7 +112,35 @@ namespace ChatAppServer.IO
                                 byte[] packetData = packet.Serialize();
                                 tcpClient.Client.Send(packetData);
                                 break;
-                            case 3:
+                            case 2:
+                                Console.WriteLine($"[{DateTime.Now}] Received message from {deserializedPacket.SenderUsername} to {deserializedPacket.Username} with content {(string)deserializedPacket.AdditionalData}");
+                                lock (Server.UserToSocketLock)
+                                {
+                                    if (Server.UserToSocket.ContainsKey(deserializedPacket.Username))
+                                    {
+                                        Message message = new Message
+                                        {
+                                            Id = Guid.NewGuid(),
+                                            ContactId = contactRepository.GetContactId(deserializedPacket.Username),
+                                            CreatedAt = DateTime.UtcNow,
+                                            IsFirstMessage = true,
+                                            IsNativeOriginated = false,
+                                            MessageText = (string)deserializedPacket.AdditionalData,
+                                            UsernameID = deserializedPacket.SenderUsername
+                                        };
+                                        messageRepository.InsertMessage(message);
+                                        PacketBuilder messagePacket = new PacketBuilder
+                                        {
+                                            Username = deserializedPacket.Username,
+                                            SenderUsername = deserializedPacket.SenderUsername,
+                                            Opcode = 2,
+                                            AdditionalData = (string)deserializedPacket.AdditionalData
+
+                                        };
+                                        Server.UserToSocket[deserializedPacket.Username].Client.Send(messagePacket.Serialize());
+                                    }
+                                }
+
                                 break;
                         }
                     }

@@ -65,6 +65,21 @@ namespace ChatApp.Network
             }
         }
 
+        public void SendMessageToContact(string UsernameId, string Username, string message) 
+        {
+            if (_tcpClient.Connected)
+            {
+                PacketBuilder packet = new PacketBuilder
+                {
+                    Opcode = 2,
+                    Username = UsernameId,
+                    SenderUsername = Username,
+                    AdditionalData = message
+                };
+                _tcpClient.Client.Send(packet.Serialize());
+            }
+        }
+
         private async Task ReceivePackets()
         {
             PacketReader packetReader = new PacketReader(_tcpClient.GetStream());
@@ -81,23 +96,53 @@ namespace ChatApp.Network
                         {
                             case 0:
                                 Console.Out.WriteLine("Received contacts");
-                                JArray additionalData = (JArray)packet.AdditionalData;
+                                JObject additionalData = (JObject)packet.AdditionalData;
 
-                                List<ContactModel> receivedContacts = new List<ContactModel>();
-                                foreach (var item in additionalData)
+                                // Check if the AdditionalData contains a 'Contacts' property
+                                if (additionalData.TryGetValue("Contacts", out JToken contactsToken))
                                 {
-                                    // Convert the JToken to a string and deserialize it into a ContactModel
-                                    ContactModel contact = item.ToObject<ContactModel>();
-                                    receivedContacts.Add(contact);
+                                    // Extract the 'Contacts' property and deserialize it into a list of ContactModel
+                                    List<ContactModel> receivedContacts = contactsToken.ToObject<List<ContactModel>>();
+                                    foreach (var contact in receivedContacts)
+                                    {
+                                        contact.Messages = new ObservableCollection<MessageModel>();
+                                    }
+                                    MainViewModel.UpdateContacts(receivedContacts);
                                 }
 
+                                // Check if the AdditionalData contains a 'Messages' property
+                                if (additionalData.TryGetValue("Message", out JToken messagesToken))
+                                {
+                                    Dictionary<Guid, List<string>> contactToMessages = new Dictionary<Guid, List<string>>();
+
+                                    // Extract the 'Messages' property and deserialize it into a list of MessageModel
+                                    List<MessageModel> messages = messagesToken.ToObject<List<MessageModel>>();
+                                    foreach (var message in messages)
+                                    {
+                                        contactToMessages[(Guid)message.ContactId].Add(message.Message); 
+                                    }
+                                    MainViewModel.GetAllMessges(messages);
+                                    // Do something with the messages, such as updating the UI or storing them
+                                    // MainViewModel.HandleMessages(messages);
+                                }
+
+                                //foreach (var item in additionalData)
+                                //{
+                                //    // Convert the JToken to a string and deserialize it into a ContactModel
+
+                                //    ContactModel contact = item.ToObject<ContactModel>();
+                                //    contact.Messages = new ObservableCollection<MessageModel>();
+                                //    receivedContacts.Add(contact);
+                                //}
+
                                 // Update MainViewModel.Contacts with the received contacts
-                                MainViewModel.UpdateContacts(receivedContacts);
+                                //MainViewModel.UpdateContacts(receivedContacts);
+                                //MainViewModel.GetAllMessges()
                                 break;
 
 
                             case 1:
-                                receivedContacts = new List<ContactModel>
+                                List<ContactModel> receivedContact = new List<ContactModel>
                                 {
                                     new ContactModel
                                     {
@@ -107,11 +152,12 @@ namespace ChatApp.Network
                                     }
                                 };
 
-                                MainViewModel.UpdateContacts(receivedContacts);
+                                MainViewModel.UpdateContacts(receivedContact);
                                 
                                 break;
-                            case 9:
-
+                            
+                            case 2:
+                                MainViewModel.GetContact(packet.SenderUsername, (string)packet.AdditionalData);
                                 break;
                         }
                         // Process the received packet

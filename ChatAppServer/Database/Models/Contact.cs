@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChatAppServer.Database.Models
 {
-    internal class Contact
+    public class Contact
     {
         public Guid Id { get; set; }
         public string UsernameId { get; set; }

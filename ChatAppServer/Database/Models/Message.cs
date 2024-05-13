@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace ChatAppServer.Database.Models
 {
-    internal class Message
+    public class Message
     {
         public Guid Id {  get; set; }
-        public Guid UserId {  get; set; }
+        public string UsernameID {  get; set; }
         public Guid ContactId {  get; set; }
         public string? MessageText {  get; set; }
         public bool IsNativeOriginated { get; set; }

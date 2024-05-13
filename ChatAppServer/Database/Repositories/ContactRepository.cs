@@ -76,12 +76,35 @@ namespace ChatAppServer.Database.Repositories
                             UsernameId = (string)reader["usersusername"],
                             CreatedAt = (DateTime)reader["created_at"],
                             ImageSrc = (string)reader["imagesrc"],
-                            LastMessage = (string)reader["lastmessage"]
+                            LastMessage = (string)reader["lastmessage"],
+                           
                         });
                     }
                 }
             }
             return contacts;
+        }
+
+        public Guid GetContactId(string Username)
+        {
+            string queryString = "SELECT id FROM contacts WHERE username = @p1";
+
+            using (NpgsqlCommand command = new NpgsqlCommand( queryString, _connection))
+            {
+                command.Parameters.Add(new NpgsqlParameter("p1", NpgsqlTypes.NpgsqlDbType.Varchar) { Value = Username });
+
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return (Guid)reader["id"];
+                    }
+                    else
+                    {
+                        return Guid.Empty;
+                    }
+                }
+            }
         }
     }
 }

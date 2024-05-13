@@ -14,9 +14,6 @@ namespace ChatAppServer
             
             dbContext = new DbContext();
             dbContext.ConnectToDatabase();
-            
-            //UsersRepository usersRepository = new UsersRepository(dbContext.Connection);
-            //usersRepository.InsertUser(user);
 
             Server = new Server(IPAddress.Parse("127.0.0.1"), 55400);
             await Server.StartServer();

@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 
 namespace ChatApp.MVVM.Model
 {
-    internal class ContactModel
+    public class ContactModel
     {
+        Guid Id { get; set; }
         public string Username { get; set; }
         public string ImageSrc { get; set; }
         public ObservableCollection<MessageModel> Messages { get; set; }
